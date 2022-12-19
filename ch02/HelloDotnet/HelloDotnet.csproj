@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Figgle" Version="0.4.0" />
+    <PackageReference Include="CommandLineParser" 
+      Version="2.8.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Figgle" />
+    <Using Include="System.Console" Static="True" />
+  </ItemGroup>
+
+</Project>

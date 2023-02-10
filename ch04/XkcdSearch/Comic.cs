@@ -69,14 +69,26 @@ public record Comic
       return await JsonSerializer.DeserializeAsync<Comic>(
         stream, cancellationToken: cancellationToken);
     }
-    catch (AggregateException e)
-      when (e.InnerException is HttpRequestException)
+    catch (Exception ex) when (
+      (ex is AggregateException 
+        && ex.InnerException is HttpRequestException)
+      || ex is HttpRequestException
+      || ex is TaskCanceledException)
     {
       return null;
     }
-    catch (HttpRequestException)
-    {
-      return null;
-    }
+    // catch (AggregateException e)
+    //   when (e.InnerException is HttpRequestException)
+    // {
+    //   return null;
+    // }
+    // catch (HttpRequestException)
+    // {
+    //   return null;
+    // }
+    // catch (TaskCanceledException)
+    // {
+    //   return null;
+    // }
   }
 }

@@ -1,0 +1,12 @@
+FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build-stage
+WORKDIR /src
+COPY AsciiArtSvc.csproj .
+RUN dotnet restore
+COPY . .
+RUN dotnet publish -o /publish
+
+FROM mcr.microsoft.com/dotnet/aspnet:6.0
+WORKDIR /publish
+COPY --from=build-stage /publish .
+EXPOSE 80
+ENTRYPOINT ["dotnet", "AsciiArtSvc.dll"]

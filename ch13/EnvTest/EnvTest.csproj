@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>7770b528-1d54-43c2-ba6e-e7f4335aee8c</UserSecretsId>
+    <ContainerImageName>envtest</ContainerImageName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ContainerPort Include="80" Type="tcp" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.9" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+    <PackageReference Include="Microsoft.NET.Build.Containers" Version="7.0.306" />
+  </ItemGroup>
+
+</Project>

@@ -1,5 +1,6 @@
 using Microsoft.Data.Sqlite;
 using System.Text.Json;
+using FakeItEasy;
 
 namespace XkcdComicFinder.Tests;
 
@@ -9,8 +10,7 @@ public class ComicFinderTests : IDisposable
   private const string LatestLink = "https://xkcd.com/info.0.json";
   private readonly ComicDbContext _comicDbContext;
   private readonly SqliteConnection _keepAliveConn;
-  private readonly IProtectedMock<HttpMessageHandler>
-    _protectedMsgHandler;
+  private readonly HttpMessageHandler _fakeMsgHandler;
   private readonly ComicFinder _comicFinder;
 
   public ComicFinderTests()
@@ -19,8 +19,9 @@ public class ComicFinderTests : IDisposable
       ComicRepositoryTests.SetupSqlite("comics_int");
     var comicRepo = new ComicRepository(_comicDbContext);
 
-    (_protectedMsgHandler, var httpClient) =
-      XkcdClientTests.SetupHttpClient();
+    _fakeMsgHandler = A.Fake<HttpMessageHandler>();
+    var httpClient = 
+      XkcdClientTests.SetupHttpClient(_fakeMsgHandler);
     var xkcdClient = new XkcdClient(httpClient);
 
     _comicFinder = new ComicFinder(xkcdClient, comicRepo);
@@ -30,7 +31,7 @@ public class ComicFinderTests : IDisposable
   [Trait("Category", "Integration")]
   public async Task StartWithEmptyRepo()
   {
-    SetResponseComics(_protectedMsgHandler,
+    SetResponseComics(_fakeMsgHandler,
       new Comic() { Number = 12, Title = "b" },
       new Comic() { Number = 1,  Title = "a" },
       new Comic() { Number = 4,  Title = "c" });
@@ -45,7 +46,7 @@ public class ComicFinderTests : IDisposable
     new(string.Format(NumberLink, c.Number));
 
   internal static void SetResponseComics(
-    IProtectedMock<HttpMessageHandler> mockMsgHandler,
+    HttpMessageHandler fakeMsgHandler,
     params Comic[] comics)
   {
     var responses = comics.ToDictionary(
@@ -54,22 +55,30 @@ public class ComicFinderTests : IDisposable
     responses.Add(new Uri(LatestLink), 
       JsonSerializer.Serialize(comics[0]));
 
-    mockMsgHandler
-      .Setup<Task<HttpResponseMessage>>("SendAsync",
-        ItExpr.IsAny<HttpRequestMessage>(),
-        ItExpr.IsAny<CancellationToken>())
-      .ReturnsAsync(
-        (HttpRequestMessage req, CancellationToken _) => {
-          var response = new HttpResponseMessage();
-          response.StatusCode = NotFound;
-          if (responses.TryGetValue(req.RequestUri!, 
-            out var content))
-          {
-            response.StatusCode = OK;
-            response.Content = new StringContent(content);
-          }
-          return response;
+    // Default is 404 not found
+    A.CallTo(fakeMsgHandler)
+      .WithReturnType<Task<HttpResponseMessage>>()
+      .Where(c => c.Method.Name == "SendAsync")   
+      .Returns(new HttpResponseMessage()
+      {
+        StatusCode = NotFound,
+      });
+
+    foreach (var responsePair in responses)
+    {
+      // Specific comics have return values
+      A.CallTo(fakeMsgHandler)
+        .WithReturnType<Task<HttpResponseMessage>>()
+        .Where(c => c.Method.Name == "SendAsync")
+        .WhenArgumentsMatch(args => 
+          args.First() is HttpRequestMessage req 
+          && req.RequestUri == responsePair.Key)
+        .Returns(new HttpResponseMessage()
+        {
+          StatusCode = OK,
+          Content = new StringContent(responsePair.Value),
         });
+    }
   }
 
   public void Dispose()

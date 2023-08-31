@@ -62,9 +62,8 @@ static async Task<Comic?> GetComicWithTitleAsync(
        number--)
   {
     var localNumber = number;
-    var getComicTask = Task.Run(() =>
-      Comic.GetComicAsync(localNumber,
-      cancellationToken.Token));
+    var getComicTask = Comic.GetComicAsync(localNumber,
+      cancellationToken.Token);
     var continuationTask = getComicTask.ContinueWith(
       t => {
         try

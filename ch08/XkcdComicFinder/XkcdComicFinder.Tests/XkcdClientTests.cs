@@ -1,4 +1,3 @@
-using System.Net;
 using FakeItEasy;
 
 namespace XkcdComicFinder.Tests;
@@ -34,7 +33,7 @@ public class XkcdClientTests
   [Fact]
   public async Task GetLatest()
   {
-    SetResponse(OK, LatestJson);
+    SetResponse(HttpStatusCode.OK, LatestJson);
     var comic = await xkcdClient.GetLatestAsync();
     Assert.Equal(2630, comic.Number);
   }
@@ -42,7 +41,7 @@ public class XkcdClientTests
   [Fact]
   public async Task NoComicFound()
   {
-    SetResponse(NotFound);
+    SetResponse(HttpStatusCode.NotFound);
     var comic = await xkcdClient.GetByNumberAsync(1);
     Assert.Null(comic);
   }
@@ -50,7 +49,7 @@ public class XkcdClientTests
   [Fact]
   public async Task GetByNumber()
   {
-    SetResponse(OK, LatestJson);
+    SetResponse(HttpStatusCode.OK, LatestJson);
     var comic = await xkcdClient.GetByNumberAsync(2630);
     Assert.NotNull(comic);
     Assert.Equal(2630, comic.Number);

@@ -47,7 +47,7 @@ public class SearchControllerTests
     var response = await client.GetAsync(
       "/search?searchText=b");
 
-    Assert.Equal(OK, response.StatusCode);
+    Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     string content = await response.Content
       .ReadAsStringAsync();
     var comics = JsonSerializer.Deserialize<Comic[]>(

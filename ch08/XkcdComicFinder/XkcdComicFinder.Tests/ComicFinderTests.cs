@@ -61,7 +61,7 @@ public class ComicFinderTests : IDisposable
       .Where(c => c.Method.Name == "SendAsync")   
       .Returns(new HttpResponseMessage()
       {
-        StatusCode = NotFound,
+        StatusCode = HttpStatusCode.NotFound,
       });
 
     foreach (var responsePair in responses)
@@ -75,7 +75,7 @@ public class ComicFinderTests : IDisposable
           && req.RequestUri == responsePair.Key)
         .Returns(new HttpResponseMessage()
         {
-          StatusCode = OK,
+          StatusCode = HttpStatusCode.OK,
           Content = new StringContent(responsePair.Value),
         });
     }

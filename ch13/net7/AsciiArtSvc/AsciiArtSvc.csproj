@@ -14,7 +14,7 @@
   <ItemGroup>
     <PackageReference Include="Figgle" Version="0.4.0" />
     <PackageReference Include="BarcodeLib" Version="2.4.0" />
-    <PackageReference Include="Microsoft.NET.Build.Containers" Version="7.0.306" />
+    <PackageReference Include="Microsoft.NET.Build.Containers" Version="7.0.405" />
   </ItemGroup>
 
 </Project>

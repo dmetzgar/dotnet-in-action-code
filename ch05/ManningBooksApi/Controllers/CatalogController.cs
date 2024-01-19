@@ -31,15 +31,18 @@ public class CatalogController : ControllerBase
   }
 
   [HttpGet("{id}")]
-  public Task<Book?> GetBook(int id)
+  public Task<Book?> GetBook(int id,
+    CancellationToken cancellationToken)
   {
     return _dbContext.Books.FirstOrDefaultAsync(
-      b => b.Id == id);
+      b => b.Id == id,
+      cancellationToken);
   }
 
   [HttpPost]
   public async Task<Book> CreateBook(
-    BookCreateCommand command)
+    BookCreateCommand command,
+    CancellationToken cancellationToken)
   {
     var book = new Book(
       command.Title,
@@ -47,7 +50,7 @@ public class CatalogController : ControllerBase
     );
 
     var entity = _dbContext.Books.Add(book);
-    await _dbContext.SaveChangesAsync();
+    await _dbContext.SaveChangesAsync(cancellationToken);
     return entity.Entity;
   }
 
@@ -55,9 +58,12 @@ public class CatalogController : ControllerBase
   [ProducesResponseType(StatusCodes.Status404NotFound)]
   [ProducesResponseType(StatusCodes.Status204NoContent)]
   public async Task<IActionResult> UpdateBook(
-    int id, BookUpdateCommand command)
+    int id, BookUpdateCommand command,
+    CancellationToken cancellationToken)
   {
-    var book = await _dbContext.FindAsync<Book>(id);
+    var book = await _dbContext.FindAsync<Book>(
+      new object?[] { id },
+      cancellationToken);
     if (book == null)
     {
       return NotFound();
@@ -73,25 +79,28 @@ public class CatalogController : ControllerBase
       book.Description = command.Description;
     }
 
-    await _dbContext.SaveChangesAsync();
+    await _dbContext.SaveChangesAsync(cancellationToken);
     return NoContent();
   }
 
   [HttpDelete("{id}")]
   [ProducesResponseType(StatusCodes.Status404NotFound)]
   [ProducesResponseType(StatusCodes.Status204NoContent)]
-  public async Task<IActionResult> DeleteBook(int id) 
+  public async Task<IActionResult> DeleteBook(int id,
+    CancellationToken cancellationToken) 
   {
     var book = await _dbContext.Books
       .Include(b => b.Ratings)
-      .FirstOrDefaultAsync(b => b.Id == id);
+      .FirstOrDefaultAsync(b => b.Id == id,
+        cancellationToken);
     if (book == null)
     {
       return NotFound();
     }
 
     _dbContext.Remove(book);
-    var rows = await _dbContext.SaveChangesAsync();
+    var rows = await _dbContext.SaveChangesAsync(
+      cancellationToken);
     Console.WriteLine("Rows deleted: " + rows);
     return NoContent();
   }

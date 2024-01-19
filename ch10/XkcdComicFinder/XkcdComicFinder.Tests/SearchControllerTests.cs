@@ -1,5 +1,6 @@
 using System.Text.Json;
 using ComicFinderService;
+using FakeItEasy;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,13 +11,11 @@ public class SearchControllerTests
 {
   private const string BaseAddress = "https://xkcd.com";
   private readonly WebApplicationFactory<Program> _factory;
-  private readonly IProtectedMock<HttpMessageHandler>
-    _protectedMsgHandler;
+  private readonly HttpMessageHandler _fakeMsgHandler;
 
   public SearchControllerTests()
   {
-    var mockMsgHandler = new Mock<HttpMessageHandler>();
-    _protectedMsgHandler = mockMsgHandler.Protected();
+    _fakeMsgHandler = A.Fake<HttpMessageHandler>();
 
     _factory = new WebApplicationFactory<Program>()
       .WithWebHostBuilder(builder =>
@@ -30,7 +29,7 @@ public class SearchControllerTests
           services.AddHttpClient<IXkcdClient, XkcdClient>(
             h => h.BaseAddress = new Uri(BaseAddress))
             .ConfigurePrimaryHttpMessageHandler(
-              () => mockMsgHandler.Object);
+              () => _fakeMsgHandler);
         });
       });
   }
@@ -39,7 +38,7 @@ public class SearchControllerTests
   public async Task FoundB()
   {
     ComicFinderTests.SetResponseComics(
-      _protectedMsgHandler,
+      _fakeMsgHandler,
       new Comic() { Number = 12, Title = "b" },
       new Comic() { Number = 1,  Title = "a" },
       new Comic() { Number = 4,  Title = "c" });
@@ -48,7 +47,7 @@ public class SearchControllerTests
     var response = await client.GetAsync(
       "/search?searchText=b");
 
-    Assert.Equal(OK, response.StatusCode);
+    Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     string content = await response.Content
       .ReadAsStringAsync();
     var comics = JsonSerializer.Deserialize<Comic[]>(
